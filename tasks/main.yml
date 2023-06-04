@@ -1,0 +1,21 @@
+---
+- name: backup | install sshfs
+  dnf:
+    name: fuse-sshfs,sshpass
+    state: present
+    enablerepo: powertools
+
+- name: backup | add Hetzner storage box host key
+  ansible.builtin.known_hosts:
+    path: /etc/ssh/ssh_known_hosts
+    name: "{{ hz_backup_sshfs_mount.host }}"
+    key: "{{ lookup('ansible.builtin.file', hz_backup_sshfs_mount.host) }}"
+
+- name: backup | create backup script
+  ansible.builtin.copy:
+    dest: "/usr/local/sbin/{{ hz_backup_sshfs_name }}"
+    mode: '0755'
+    content: |
+      #!/bin/bash
+
+      {{ hz_backup_sshfs_command }}

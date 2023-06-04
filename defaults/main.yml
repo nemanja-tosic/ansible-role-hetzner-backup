@@ -1,0 +1,14 @@
+---
+hz_backup_sshfs_mount:
+  host: host
+  path: /
+  user: user
+  password: "password"
+  # NOTE: the service only supports the "/backup" dest at the moment
+  dest: /backup
+  uid: optional
+  gid: optional
+
+hz_backup_sshfs_retention_days: 7
+hz_backup_sshfs_calendar: '*-*-* 22:00:00'
+hz_backup_sshfs_name: 'backup'

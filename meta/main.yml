@@ -1,0 +1,41 @@
+---
+dependencies:
+  - role: 0x0i.systemd
+    vars:
+      unit_config:
+        - name: "backup"
+          type: mount
+          Unit:
+            DefaultDependencies: no
+            Conflicts: umount.target
+            Before: umount.target
+            # unmount the drive after usage
+            StopWhenUnneeded: true
+          Mount:
+            What: "{{ hz_backup_sshfs_mount.user }}@{{ hz_backup_sshfs_mount.host }}:{{ hz_backup_sshfs_mount.path }}"
+            Where: "{{ hz_backup_sshfs_mount.dest }}"
+            Type: fuse.sshfs
+            # using \040 for spaces is a fstab rule, quotes are not allowed
+            Options: >
+              rw,uid={{ hz_backup_sshfs_mount.uid }},gid={{ hz_backup_sshfs_mount.gid }},ssh_command=sshpass\040-p\040{{ hz_backup_sshfs_mount.password }}\040ssh,allow_other
+          Install:
+            WantedBy: 'multi-user.target'
+        - name: "{{ hz_backup_sshfs_name }}"
+          Unit:
+            BindsTo: "backup.mount"
+            After: "backup.mount"
+          Service:
+            ExecStart: "/usr/local/sbin/{{ hz_backup_sshfs_name }}"
+            ExecStartPost: "find {{ hz_backup_sshfs_mount.dest }} -type f -mtime +{{ hz_backup_sshfs_retention_days }} -delete"
+            ExecReload: '/bin/kill -s HUP $MAINPID'
+          Install:
+            WantedBy: 'multi-user.target'
+        - name: "{{ hz_backup_sshfs_name }}"
+          type: timer
+          enabled: yes
+          state: started
+          Timer:
+            OnCalendar: "{{ hz_backup_sshfs_calendar }}"
+            Unit: "{{ hz_backup_sshfs_name }}.service"
+          Install:
+            WantedBy: 'multi-user.target'
