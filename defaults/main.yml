@@ -1,14 +1,19 @@
 ---
 hz_backup_sshfs_mount:
   host: host
-  path: /
+  # the path on the remote host
+  path: /backup
   user: user
   password: "password"
   # NOTE: the service only supports the "/backup" dest at the moment
+  # the path on the local host
   dest: /backup
-  uid: optional
-  gid: optional
+  # the uid and gid of dest folder
+  uid: root
+  gid: root
 
-hz_backup_sshfs_retention_days: 7
+# Be careful when enabling this variable, as it will delete all files from hz_backup_sshfs_mount.dest
+# Make sure that all the files in that folder are backups
+hz_backup_sshfs_retention_days: null
 hz_backup_sshfs_calendar: '*-*-* 22:00:00'
 hz_backup_sshfs_name: 'backup'

@@ -16,8 +16,8 @@ dependencies:
             Where: "{{ hz_backup_sshfs_mount.dest }}"
             Type: fuse.sshfs
             # using \040 for spaces is a fstab rule, quotes are not allowed
-            Options: >
-              rw,uid={{ hz_backup_sshfs_mount.uid }},gid={{ hz_backup_sshfs_mount.gid }},ssh_command=sshpass\040-p\040{{ hz_backup_sshfs_mount.password }}\040ssh,allow_other
+            Options: >-
+              rw,uid={{ hz_backup_sshfs_mount.uid | default(0) }},gid={{ hz_backup_sshfs_mount.gid | default(0) }},ssh_command=sshpass\040-p\040{{ hz_backup_sshfs_mount.password }}\040ssh,allow_other
           Install:
             WantedBy: 'multi-user.target'
         - name: "{{ hz_backup_sshfs_name }}"
@@ -26,7 +26,10 @@ dependencies:
             After: "backup.mount"
           Service:
             ExecStart: "/usr/local/sbin/{{ hz_backup_sshfs_name }}"
-            ExecStartPost: "find {{ hz_backup_sshfs_mount.dest }} -type f -mtime +{{ hz_backup_sshfs_retention_days }} -delete"
+            ExecStartPost: >-
+              {% if hz_backup_sshfs_retention_days != None -%}
+                find {{ hz_backup_sshfs_mount.dest }} -type f -mtime +{{ hz_backup_sshfs_retention_days }} -delete
+              {%- endif %}
             ExecReload: '/bin/kill -s HUP $MAINPID'
           Install:
             WantedBy: 'multi-user.target'
